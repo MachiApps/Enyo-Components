@@ -1,0 +1,9 @@
+{
+	"id": "com.machiapps.comp",
+	"version": "1.0.0",
+	"vendor": "MachiApps",
+	"type": "web",
+	"main": "index.html",
+	"title": "Components",
+	"uiRevision":2
+}
