@@ -8,57 +8,27 @@ Redistributions of source code must retain the above copyright notice, this list
 Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
-Use:
-	In Components:
-		{kind: "Popup", name: "calPopup", components:[
-			{kind: "PopupCal", width: '320px', onSelected: "dateChanged", closeOnSelected: false}
-		]}
-		Options:
-			selectedMonth: Default Month
-			selectedYear: Default Year
-			selectedDay: Default Day
-			years: Selectable Years
-			months: Selectable Months
-			dayColorDefault: Default Color of Month Days
-			dayColorSelected: Color of the Selected Day (Only used if closeOnSelected is false)
-			dayColorToday: Color of Current Day
-			dayColorOtherMonth: Color of Previous/Future Month Days
-			numberColorThisMonth: Color of Numbers for current Month
-			numberColorOtherMonth: Color of Numbers for Other Months
-			closeOnSelected: If true, popup closes on selection, otherwise stays open and displays date
-		
-	To Open:
-		openCal: function(inSender, inEvent){
-			this.$.calPopup.openAtEvent(inEvent);
-		}
-		
-	On Selected Date:
-		dateChanged: function(inSender,y,m,d){
-			console.log("Year: " + y);
-			console.log("Month: " + m);
-			console.log("Day: " + d);
-		}
-*/
 enyo.kind({
 	name:"PopupCal",
 	kind: enyo.VFlexBox,
-	selectedMonth: new Date().getMonth()+1,
-	selectedYear: new Date().getFullYear(),
-	selectedDay: new Date().getDate(),
-	years: ['2010', '2011', '2012', '2013'],
-	months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-	dayArray: [],
-	dayColorDefault: "LightSlateGray",
-	dayColorSelected: "Gold",
-	dayColorToday: "GoldenRod",
-	dayColorOtherMonth: "Silver",
-	numberColorThisMonth: "#202020",
-	numberColorOtherMonth: "dimgrey",
-	closeOnSelected: false,
+	published: {
+		selectedMonth: new Date().getMonth()+1,
+		selectedYear: new Date().getFullYear(),
+		selectedDay: new Date().getDate(),
+		years: ['2010', '2011', '2012', '2013'],
+		months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+		dayArray: [],
+		dayColorDefault: "LightSlateGray",
+		dayColorSelected: "Gold",
+		dayColorToday: "GoldenRod",
+		dayColorOtherMonth: "Silver",
+		numberColorThisMonth: "#202020",
+		numberColorOtherMonth: "dimgrey",
+		closeOnSelected: false,
+	},
 	events: {
-		onSelected: ""
+		onSelected: "",
+		onClose: ""
 	},
 	components:[
 		{kind: "VFlexBox", name: "calView", components: [
@@ -79,7 +49,7 @@ enyo.kind({
 				{content: "F", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
 				{content: "S", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
 			]},
-			{kind:"Control", flex: 1, content: "<div style='position: relative;'><canvas id='myCanvas' width='100%' height='100%' style='position: absolute; left: 0; top: 0; z-index: 0;'></canvas></div>", height:'275px', onclick: "calTap"},
+			{kind:"Control", flex: 1, content: "<div style='position: relative;'><canvas id='myCanvas' width='330px' height='275.7px' style='position: absolute; left: 0; top: 0; z-index: 0;'></canvas></div>", height:'275px', onclick: "calTap"},
 			{kind: "HFlexBox", name: "selectedBox", components:[
 				{name: "selectedText", content: "Selected Day: ", style: "color: Crimson; font-size:14px; margin-top:-7px;"},
 				{flex:1},
@@ -87,6 +57,9 @@ enyo.kind({
 			]}
 		]}
 	],
+	
+	
+
 	rendered: function(){
 		for (i = 0; i < 7; i++) {
 			this.dayArray[i] = [];
@@ -96,15 +69,13 @@ enyo.kind({
 		}
 		var x_tot = 310;
 		var y_tot = x_tot*6/7;
-		document.getElementById('myCanvas').width = x_tot+20;
-		document.getElementById('myCanvas').height = y_tot+10;
 		this.drawCal();
 		this.$.monthName.setItems(this.months);
 		this.$.yearName.setItems(this.years);
 		this.updateStuff();
 	},
 	closeWin: function(){
-		this.owner.$.calPopup.close();
+		this.doClose();
 	},
 	prevMonth: function(){
 		var x1 = new Date(this.selectedYear, this.selectedMonth - 2);
@@ -134,7 +105,6 @@ enyo.kind({
 		}
 		this.selectedYear = this.$.yearName.getValue();
 		this.drawCal();
-		this.updateStuff();
 	},
 	drawCal: function(){
 		this.getDays();
@@ -147,7 +117,6 @@ enyo.kind({
 		if (this.selectedMonth == (5 || 7 || 10 || 12)){
 			lastDayPrevMonth = 30;
 		} else if (this.selectedMonth == 3){
-			//Leap Year Check
 			if (((this.selectedYear % 4 == 0) && (this.selectedYear % 100 != 0)) || (this.selectedYear % 400 == 0)) {
 				lastDayPrevMonth = 29;
 			} else {
