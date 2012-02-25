@@ -16,7 +16,7 @@ enyo.kind({
 		selectedYear: new Date().getFullYear(),
 		selectedDay: new Date().getDate(),
 		years: ['2010', '2011', '2012', '2013'],
-		months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+		month: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 		dayArray: [],
 		dayColorDefault: "LightSlateGray",
 		dayColorSelected: "Gold",
@@ -31,34 +31,93 @@ enyo.kind({
 		onClose: ""
 	},
 	components:[
-		{kind: "VFlexBox", name: "calView", components: [
-			{kind: "HFlexBox", components: [
-				{kind: "ToolButton", icon: "images/menu-icon-back.png", onclick: "prevMonth"},
-				{flex:1},
-				{kind: "Picker", name: "monthName", onChange: "redraw"},
-				{kind: "Picker", name: "yearName", onChange: "redraw"},
-				{flex:1},
-				{kind: "ToolButton", icon: "images/menu-icon-forward.png", onclick: "nextMonth"}
-			]},
-			{kind: "HFlexBox", components: [
-				{content: "S", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-				{content: "M", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-				{content: "T", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-				{content: "W", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-				{content: "Th", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-				{content: "F", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-				{content: "S", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
-			]},
-			{kind:"Control", flex: 1, content: "<div style='position: relative;'><canvas id='myCanvas' width='330px' height='275.7px' style='position: absolute; left: 0; top: 0; z-index: 0;'></canvas></div>", height:'275px', onclick: "calTap"},
-			{kind: "HFlexBox", name: "selectedBox", components:[
-				{name: "selectedText", content: "Selected Day: ", style: "color: Crimson; font-size:14px; margin-top:-7px;"},
-				{flex:1},
-				{kind: "Button", caption:"Done", style:"font-size:13px; line-height:12px; text-align:center; min-height:10px; background-color:#2071bb; color:White; margin-top:-10px;", onclick: "closeWin"}
-			]}
+		{kind: "HFlexBox", components: [
+			{kind: "ToolButton", icon: "images/menu-icon-back.png", onclick: "prevMonth"},
+			{flex:1},
+			{kind: "Picker", name: "monthName", onChange: "redraw"},
+			{kind: "Picker", name: "yearName", onChange: "redraw"},
+			{flex:1},
+			{kind: "ToolButton", icon: "images/menu-icon-forward.png", onclick: "nextMonth"}
+		]},
+		{kind: "HFlexBox", components: [
+			{content: "S", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+			{content: "M", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+			{content: "T", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+			{content: "W", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+			{content: "Th", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+			{content: "F", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+			{content: "S", style: "color: Crimson; font-size:14px; text-align:center; margin-top:0px;", flex:1},
+		]},
+		{kind: "VFlexBox", flex: 1, name: "calVBox"},
+		{kind: "HFlexBox", name: "selectedBox", components:[
+			{name: "selectedText", content: "Selected Day: ", style: "color: Crimson; font-size:14px; margin-top:0px;"},
+			{flex:1},
+			{kind: "Button", caption:"Done", style:"font-size:13px; line-height:12px; text-align:center; min-height:10px; background-color:#2071bb; color:White; margin-top:0px;", onclick: "closeWin"}
 		]}
 	],
-	
-	
+	getMonthComps: function(){
+		this.$.calVBox.destroyControls();
+		var x1 = [];
+		for (i2=0; i2<6; i2++){
+			x1.push(this.getWeekComp(i2));
+		}
+		this.$.calVBox.createComponents(x1, {owner: this});
+		this.$.calVBox.render();
+	},
+	getWeekComp: function(r){
+		var x = [];
+		for(i=0;i<7;i++){
+			var d = this.dayArray[i][r];
+			var m = this.selectedMonth;
+			var y = this.selectedYear;
+			if (r==0 && d>15){
+				m--;
+				if (m == -1) {
+					m = 11;
+					y--;
+				}
+			} else if (r>=4 && d<15){
+				m++;
+				if (m == 12) {
+					m = 0;
+					y++;
+				}
+			}
+			x.push(this.getDayComp(d,m,y));
+		}
+		return({kind:"HFlexBox", flex:1, components:x});
+	},
+	getDayComp: function(d,m,yr){
+		var c = this.dayColorDefault;
+		var d1 = new Date().getDate();
+		var m1 = new Date().getMonth() + 1;
+		var y1 = new Date().getFullYear();
+		if (m < this.selectedMonth || m > this.selectedMonth) {
+			//Not Current Month
+			c = this.dayColorOtherMonth;
+		} else if (this.selectedYear == yr && this.selectedDay == d && this.selectedMonth == m && !this.closeOnSelected) {
+			//Selected Day
+			c = this.dayColorSelected;
+		} else if (y1 == yr && d1 == d && m1 == m) {
+			//Current Day
+			c = this.dayColorToday;
+		}
+		var c2 = this.numberColorThisMonth;
+		if (this.selectedMonth != m) {
+			c2 = this.numberColorOtherMonth;
+		}
+		return({flex:1, onclick: 'calTap', style: "background-color:" + c + "; color:" + c2 + "; font-size:14px; margin:1px; padding:3px; border:1px solid #000000;", day: d, month: m, year: yr, content: d});
+	},
+	calTap: function(inSender, event) {
+		this.selectedDay = inSender.day;
+		this.updateStuff();
+		this.doSelected(inSender.year, inSender.month, this.selectedDay);
+		if(this.closeOnSelected){
+			this.closeWin();
+		} else {
+			this.drawCal();
+		}
+	},
 
 	rendered: function(){
 		for (i = 0; i < 7; i++) {
@@ -67,10 +126,8 @@ enyo.kind({
 		if (this.closeOnSelected){
 			this.$.selectedBox.setShowing(false);
 		}
-		var x_tot = 310;
-		var y_tot = x_tot*6/7;
 		this.drawCal();
-		this.$.monthName.setItems(this.months);
+		this.$.monthName.setItems(this.month);
 		this.$.yearName.setItems(this.years);
 		this.updateStuff();
 	},
@@ -92,14 +149,14 @@ enyo.kind({
 		this.drawCal();
 	},
 	updateStuff: function(){
-		this.$.monthName.setValue(this.months[this.selectedMonth-1]);
+		this.$.monthName.setValue(this.month[this.selectedMonth-1]);
 		this.$.yearName.setValue(this.selectedYear);
-		this.$.selectedText.setContent("Selected Day: " + this.months[this.selectedMonth-1] + " " + this.selectedDay + ", " + this.selectedYear);
+		this.$.selectedText.setContent("Selected Day: " + this.month[this.selectedMonth-1] + " " + this.selectedDay + ", " + this.selectedYear);
 	},
 	redraw: function(){
 		var sm = this.$.monthName.getValue();
-		for (i=0;i<this.months.length;i++){
-			if (sm == this.months[i]){
+		for (i=0;i<this.month.length;i++){
+			if (sm == this.month[i]){
 				this.selectedMonth = i+1;
 			}
 		}
@@ -108,7 +165,7 @@ enyo.kind({
 	},
 	drawCal: function(){
 		this.getDays();
-		this.drawStuff();
+		this.getMonthComps();
 	},
 	getDays: function(){
 		var dt = new Date(this.selectedMonth + " 1, " + this.selectedYear);
@@ -152,104 +209,6 @@ enyo.kind({
 					day = 0;
 				}
 				day++;
-			}
-		}
-	},
-	drawDayRect: function(x, y, d, m, yr) {
-		var canvas = document.getElementById('myCanvas');
-		var ctx = canvas.getContext("2d");
-		var c = this.dayColorDefault;
-		var d1 = new Date().getDate();
-		var m1 = new Date().getMonth() + 1;
-		var y1 = new Date().getFullYear();
-		if (m < this.selectedMonth || m > this.selectedMonth) {
-			//Not Current Month
-			c = this.dayColorOtherMonth;
-		} else if (this.selectedYear == yr && this.selectedDay == d && this.selectedMonth == m && !this.closeOnSelected) {
-			//Selected Day
-			c = this.dayColorSelected;
-		} else if (y1 == yr && d1 == d && m1 == m) {
-			//Current Day
-			c = this.dayColorToday;
-		}
-		//Shadow
-		ctx.fillStyle = 'Black';
-		ctx.fillRect(x+1, y+1, 43, 40);
-		//Day Rectangle
-		ctx.fillStyle = c;
-		ctx.fillRect(x, y, 43, 40);
-	},
-	drawNum: function(dayNumber, color, x, y) {
-		n_size = 15;
-		var off_s = 1;
-		var canvas = document.getElementById('myCanvas');
-		var ctx = canvas.getContext("2d");
-		ctx.fillStyle = "silver";
-		ctx.font = "bold " + n_size + "px Calibri";
-		ctx.fillText(dayNumber, x + 3+off_s, y + 16 + off_s);
-		ctx.fillStyle = color;
-		ctx.font = "bold " + n_size + "px Calibri";
-		ctx.fillText(dayNumber, x + 3, y + 16);
-	},
-	drawStuff: function() {
-		for (i = 0; i < 6; i++) {
-			for (j1 = 0; j1 < 7; j1++) {
-				var x_off = (46) * j1;
-				var y_off = 5 + (42.5) * i;
-				var d = this.dayArray[j1][i];
-				var m = this.selectedMonth;
-				var y = this.selectedYear;
-				if (i == 0 && d > 15) {
-				//Previous Month
-					m--;
-					if (m == -1) {
-						m = 11;
-						y--;
-					}
-				} else if (i > 3 && d < 15) {
-				//Next Month
-					m++;
-					if (m == 12) {
-						m = 0;
-						y++;
-					}
-				}
-				this.drawDayRect(x_off, y_off, d, m, y);
-				var c = this.numberColorThisMonth;
-				if (this.selectedMonth != m) {
-					c = this.numberColorOtherMonth;
-				}
-				this.drawNum(d, c, x_off, y_off);
-			}
-		}
-		
-	},
-	calTap: function(inSender, event) {
-		var x = event.offsetX;
-		var y = event.offsetY;
-		var x1 = Math.floor(((x) / (46)));
-		var y1 = Math.floor((y - 5) / (42.5));
-		var z = this.dayArray[x1][y1];
-		if (y1 == 0 && this.dayArray[x1][y1] > 10) {
-			this.selectedMonth--;
-			if (this.selectedMonth == 0) {
-				this.selectedMonth = 12;
-				this.selectedYear--;
-			}
-		} else if (y1 > 3 && this.dayArray[x1][y1] < 15) {
-			this.selectedMonth++;
-			if (this.selectedMonth == 13) {
-				this.selectedMonth = 1;
-				this.selectedYear++;
-			}
-		}
-		if (!isNaN(z)) {
-			this.selectedDay = z;
-			this.updateStuff();
-			this.drawCal();
-			this.doSelected(this.selectedYear, this.selectedMonth, this.selectedDay);
-			if(this.closeOnSelected){
-				this.closeWin();
 			}
 		}
 	}

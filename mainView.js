@@ -31,8 +31,8 @@ enyo.kind({
 	},
 	openCal: function(inSender, inEvent){
 		this.$.sDate.setStyle("background-color: LightBlue;");
-		var y = this.$.eDate.createComponent({kind: "Popup", dismissWithClick: false, name: "calPopup", style: "border-width: 12px;", components:[
-										{kind: "PopupCal", width: '320px', onSelected: "dateChanged", onClose: "closeStartDate", closeOnSelected: true}
+		var y = this.$.eDate.createComponent({kind: "Popup", dismissWithClick: true, name: "calPopup", style: "border-width: 12px;", components:[
+										{kind: "PopupCal", width: '320px', height: '360px', onSelected: "dateChanged", onClose: "closeStartDate", closeOnSelected: true}
 									]}, {owner: this});
 		y.openAtEvent(inEvent);
 	},
@@ -46,7 +46,7 @@ enyo.kind({
 	openEndCal: function(inSender, inEvent){
 		this.$.eDate.setStyle("background-color: LightBlue;");
 		var y = this.$.eDate.createComponent({kind: "Popup", name: "calPopupEnd", style: "border-width: 12px;", components:[
-										{kind: "PopupCal", width: '320px', onSelected: "dateEndChanged", onClose: "closeEndDate", closeOnSelected: false}
+										{kind: "PopupCal", width: '320px', height: '360px', onSelected: "dateEndChanged", onClose: "closeEndDate", closeOnSelected: true}
 									]}, {owner: this});
 		y.openAtEvent(inEvent);
 	},
